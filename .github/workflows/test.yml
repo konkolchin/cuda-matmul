@@ -18,15 +18,20 @@ jobs:
       with:
         python-version: '3.8'
 
-    - name: Set up CUDA
-      uses: nvidia/setup-cuda@v4
-      with:
-        cuda-version: '11.8'
-        components: cuda-toolkit
+    - name: Install CUDA 12.3
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y wget gnupg lsb-release
+        wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2204/x86_64/cuda-ubuntu2204.pin
+        sudo mv cuda-ubuntu2204.pin /etc/apt/preferences.d/cuda-repository-pin-600
+        wget https://developer.download.nvidia.com/compute/cuda/12.3.1/local_installers/cuda-repo-ubuntu2204-12-3-local_12.3.1-1_amd64.deb
+        sudo dpkg -i cuda-repo-ubuntu2204-12-3-local_12.3.1-1_amd64.deb
+        sudo cp /var/cuda-repo-ubuntu2204-12-3-local/cuda-*-keyring.gpg /usr/share/keyrings/
+        sudo apt-get update
+        sudo apt-get -y install cuda
 
     - name: Install dependencies
       run: |
-        sudo apt-get update
         sudo apt-get install -y cmake build-essential
         python -m pip install --upgrade pip
         pip install numpy pytest
@@ -39,4 +44,4 @@ jobs:
     - name: Run tests
       run: |
         cd tests
-        python -m pytest test_matrix_ops.py -v 
+        python -m pytest test_matrix_ops.py -v
