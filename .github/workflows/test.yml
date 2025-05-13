@@ -23,10 +23,11 @@ jobs:
         python-version: '3.8'
 
     - name: Set up CUDA
-      uses: nvidia/setup-cuda@v2
+      uses: nvidia/setup-cuda@v3
       with:
         cuda-version: ${{ matrix.cuda-version }}
         windows-install-dir: 'C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA'
+        components: cuda-toolkit
 
     - name: Install dependencies (Ubuntu)
       if: matrix.os == 'ubuntu-latest'
