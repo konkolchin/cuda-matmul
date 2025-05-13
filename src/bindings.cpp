@@ -6,7 +6,8 @@ namespace py = pybind11;
 
 py::array_t<float> matrix_multiply_wrapper(py::array_t<float> a, 
                                          py::array_t<float> b,
-                                         bool useGpu) {
+                                         bool useGpu,
+                                         int tile_size = 16) {  // Default to 16x16 tiles
     // Get input arrays
     py::buffer_info a_buf = a.request();
     py::buffer_info b_buf = b.request();
@@ -14,6 +15,11 @@ py::array_t<float> matrix_multiply_wrapper(py::array_t<float> a,
     // Check input dimensions
     if (a_buf.ndim != 2 || b_buf.ndim != 2) {
         throw std::runtime_error("Input arrays must be 2D");
+    }
+    
+    // Validate tile size
+    if (useGpu && tile_size != 16 && tile_size != 32) {
+        throw std::runtime_error("Tile size must be either 16 or 32");
     }
     
     int m = a_buf.shape[0];
@@ -34,7 +40,7 @@ py::array_t<float> matrix_multiply_wrapper(py::array_t<float> a,
     float* result_ptr = static_cast<float*>(result_buf.ptr);
     
     // Call the matrix multiplication function
-    matrix_multiply(a_ptr, b_ptr, result_ptr, m, k, n, useGpu);
+    matrix_multiply(a_ptr, b_ptr, result_ptr, m, k, n, useGpu, tile_size);
     
     return result;
 }
@@ -46,5 +52,6 @@ PYBIND11_MODULE(cuda_ops, m) {
           "Multiply two matrices using CPU or GPU",
           py::arg("a").noconvert(),
           py::arg("b").noconvert(),
-          py::arg("use_gpu") = false);
+          py::arg("use_gpu") = false,
+          py::arg("tile_size") = 16);
 } 

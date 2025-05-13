@@ -9,5 +9,5 @@ extern "C" {
 
     // Matrix multiplication function that can work on both CPU and GPU
     void matrix_multiply(const float* a, const float* b, float* c, 
-                        int m, int k, int n, bool useGpu);
+                        int m, int k, int n, bool useGpu, int tile_size = 16);
 }

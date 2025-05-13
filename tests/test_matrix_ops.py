@@ -16,6 +16,7 @@ class TestMatrixOps(unittest.TestCase):
         # Set random seed for reproducibility
         np.random.seed(42)
         self.has_gpu = has_gpu()
+        self.block_sizes = [16, 32]  # Define block sizes to test
         
     def test_small_matrices(self):
         # Test with small matrices
@@ -29,10 +30,11 @@ class TestMatrixOps(unittest.TestCase):
         result_cpu = cuda_ops.matrix_multiply(a, b, use_gpu=False)
         np.testing.assert_array_almost_equal(result_cpu, expected)
         
-        # Test GPU implementation if available
+        # Test GPU implementation with both block sizes if available
         if self.has_gpu:
-            result_gpu = cuda_ops.matrix_multiply(a, b, use_gpu=True)
-            np.testing.assert_array_almost_equal(result_gpu, expected)
+            for block_size in self.block_sizes:
+                result_gpu = cuda_ops.matrix_multiply(a, b, use_gpu=True, block_size=block_size)
+                np.testing.assert_array_almost_equal(result_gpu, expected)
         
     def test_large_matrices(self):
         # Test with larger matrices
@@ -47,11 +49,27 @@ class TestMatrixOps(unittest.TestCase):
         result_cpu = cuda_ops.matrix_multiply(a, b, use_gpu=False)
         np.testing.assert_array_almost_equal(result_cpu, expected, decimal=4)
         
-        # Test GPU implementation if available
+        # Test GPU implementation with both block sizes if available
         if self.has_gpu:
-            result_gpu = cuda_ops.matrix_multiply(a, b, use_gpu=True)
-            np.testing.assert_array_almost_equal(result_gpu, expected, decimal=4)
+            for block_size in self.block_sizes:
+                result_gpu = cuda_ops.matrix_multiply(a, b, use_gpu=True, block_size=block_size)
+                np.testing.assert_array_almost_equal(result_gpu, expected, decimal=4)
+    
+    def test_very_large_matrices(self):
+        # Test with very large matrices (2048x2048)
+        m, k, n = 2048, 2048, 2048
+        a = np.random.rand(m, k).astype(np.float32)
+        b = np.random.rand(k, n).astype(np.float32)
         
+        # Expected result using numpy
+        expected = np.matmul(a, b)
+        
+        # Test GPU implementation with both block sizes if available
+        if self.has_gpu:
+            for block_size in self.block_sizes:
+                result_gpu = cuda_ops.matrix_multiply(a, b, use_gpu=True, block_size=block_size)
+                np.testing.assert_array_almost_equal(result_gpu, expected, decimal=4)
+            
     def test_invalid_dimensions(self):
         # Test with incompatible matrix dimensions
         a = np.random.rand(2, 3).astype(np.float32)
@@ -60,13 +78,18 @@ class TestMatrixOps(unittest.TestCase):
         with self.assertRaises(RuntimeError):
             cuda_ops.matrix_multiply(a, b, use_gpu=False)
             
+        if self.has_gpu:
+            for block_size in self.block_sizes:
+                with self.assertRaises(RuntimeError):
+                    cuda_ops.matrix_multiply(a, b, use_gpu=True, block_size=block_size)
+            
     def test_performance(self):
         # Test performance with large matrices
-        sizes = [(100, 100), (500, 500), (1000, 1000)]
+        sizes = [(1024, 1024), (2048, 2048)]  # Test both sizes
         
         print("\nPerformance Test Results:")
-        print("Size\t\tCPU Time (s)\tGPU Time (s)\tSpeedup")
-        print("-" * 50)
+        print("Matrix Size\tCPU Time (s)\tGPU 16x16 (s)\tGPU 32x32 (s)\tSpeedup 16x16\tSpeedup 32x32")
+        print("-" * 80)
         
         for m, n in sizes:
             k = m  # Square matrices for simplicity
@@ -77,7 +100,8 @@ class TestMatrixOps(unittest.TestCase):
             for _ in range(3):
                 cuda_ops.matrix_multiply(a, b, use_gpu=False)
                 if self.has_gpu:
-                    cuda_ops.matrix_multiply(a, b, use_gpu=True)
+                    for block_size in self.block_sizes:
+                        cuda_ops.matrix_multiply(a, b, use_gpu=True, block_size=block_size)
             
             # CPU timing
             start = time.time()
@@ -87,14 +111,20 @@ class TestMatrixOps(unittest.TestCase):
             
             # GPU timing if available
             if self.has_gpu:
-                start = time.time()
-                for _ in range(5):
-                    cuda_ops.matrix_multiply(a, b, use_gpu=True)
-                gpu_time = (time.time() - start) / 5
-                speedup = cpu_time / gpu_time
-                print(f"{m}x{n}\t\t{cpu_time:.4f}\t\t{gpu_time:.4f}\t\t{speedup:.2f}x")
+                gpu_times = []
+                speedups = []
+                
+                for block_size in self.block_sizes:
+                    start = time.time()
+                    for _ in range(5):
+                        cuda_ops.matrix_multiply(a, b, use_gpu=True, block_size=block_size)
+                    gpu_time = (time.time() - start) / 5
+                    gpu_times.append(gpu_time)
+                    speedups.append(cpu_time / gpu_time)
+                
+                print(f"{m}x{n}\t\t{cpu_time:.4f}\t\t{gpu_times[0]:.4f}\t\t{gpu_times[1]:.4f}\t\t{speedups[0]:.2f}x\t\t{speedups[1]:.2f}x")
             else:
-                print(f"{m}x{n}\t\t{cpu_time:.4f}\t\tN/A\t\tN/A")
+                print(f"{m}x{n}\t\t{cpu_time:.4f}\t\tN/A\t\tN/A\t\tN/A\t\tN/A")
 
 if __name__ == '__main__':
     unittest.main() 
