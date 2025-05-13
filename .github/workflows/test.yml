@@ -1,0 +1,66 @@
+name: Build and Test
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build-and-test:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        cuda-version: ['11.4']
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.8'
+
+    - name: Set up CUDA
+      if: matrix.os == 'ubuntu-latest'
+      uses: jwlawson/actions-setup-cuda@v1.13.0
+      with:
+        cuda-version: ${{ matrix.cuda-version }}
+
+    - name: Set up CUDA (Windows)
+      if: matrix.os == 'windows-latest'
+      uses: jwlawson/actions-setup-cuda@v1.13.0
+      with:
+        cuda-version: ${{ matrix.cuda-version }}
+        windows-install-dir: 'C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA'
+
+    - name: Install dependencies (Ubuntu)
+      if: matrix.os == 'ubuntu-latest'
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y cmake build-essential
+        python -m pip install --upgrade pip
+        pip install numpy pytest
+
+    - name: Install dependencies (Windows)
+      if: matrix.os == 'windows-latest'
+      run: |
+        python -m pip install --upgrade pip
+        pip install numpy pytest cmake
+
+    - name: Build (Ubuntu)
+      if: matrix.os == 'ubuntu-latest'
+      run: |
+        chmod +x build.sh
+        ./build.sh
+
+    - name: Build (Windows)
+      if: matrix.os == 'windows-latest'
+      run: |
+        .\build.bat
+
+    - name: Run tests
+      run: |
+        cd tests
+        python -m pytest test_matrix_ops.py -v 

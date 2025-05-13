@@ -1,106 +1,198 @@
 # CUDA Matrix Operations Library
 
-This package contains the CUDA matrix operations library and its Python bindings.
+A high-performance CUDA-accelerated matrix operations library with Python bindings. This library provides efficient implementations of common matrix operations using NVIDIA GPUs.
 
-## Quick Start
+## Features
 
-1. Install the package:
+- Matrix multiplication (GEMM) operations
+- Optimized CUDA kernels for GPU acceleration
+- Python bindings for easy integration
+- Cross-platform support (Linux and Windows)
+- Comprehensive test suite
+
+## Requirements
+
+- NVIDIA GPU with CUDA support
+- CUDA Toolkit 11.4 or later
+- CMake 3.10 or later
+- Python 3.8 or later
+- NumPy
+- Build tools (GCC/Clang for Linux, Visual Studio for Windows)
+
+## Installation
+
+### Linux (Ubuntu/Debian)
+
+1. Install CUDA Toolkit:
+```bash
+wget https://developer.download.nvidia.com/compute/cuda/11.4.4/local_installers/cuda-repo-ubuntu2004-11-4-local_11.4.4-470.82.01-1_amd64.deb
+sudo dpkg -i cuda-repo-ubuntu2004-11-4-local_11.4.4-470.82.01-1_amd64.deb
+sudo apt-key add /var/cuda-repo-ubuntu2004-11-4-local/7fa2af80.pub
+sudo apt-get update
+sudo apt-get install cuda
+```
+
+2. Install build dependencies:
+```bash
+sudo apt-get update
+sudo apt-get install -y cmake build-essential python3-dev
+```
+
+3. Clone and build the library:
+```bash
+git clone https://github.com/konkolchin/cuda-matmul.git
+cd cuda-matmul
+chmod +x build.sh
+./build.sh
+```
+
+4. Install Python package:
 ```bash
 pip install -r requirements.txt
 pip install -e .
 ```
 
-2. Use it in your code:
-```python
-import numpy as np
-import cuda_ops
+### Windows
 
-# Create two matrices
-a = np.array([[1, 2], [3, 4]], dtype=np.float32)
-b = np.array([[5, 6], [7, 8]], dtype=np.float32)
+1. Install CUDA Toolkit from [NVIDIA's website](https://developer.nvidia.com/cuda-downloads)
+2. Install build dependencies:
+   - Install Visual Studio 2019 or later with C++ development tools
+   - Install CMake from [cmake.org](https://cmake.org/download/)
+   - Add both to your system PATH
 
-# Multiply them (on CPU or GPU)
-result = cuda_ops.matrix_multiply(a, b, use_gpu=True)
-print(result)  # [[19 22]
-               #  [43 50]]
+3. Clone and build the library:
+```powershell
+git clone https://github.com/konkolchin/cuda-matmul.git
+cd cuda-matmul
+.\build.bat
 ```
 
-That's it! The library handles all the CUDA setup automatically.
-
-## Contents
-- lib/libcuda_ops.so: The main shared library
-- src/: Source files for the library
-- tests/: Test files demonstrating usage
-- build_scripts/: Build scripts for different platforms
-- setup.py: Python package setup file
-- requirements.txt: Python dependencies
-
-## Building
-1. For Linux (using Docker):
-   cd build_scripts
-   ./build_docker.bat
-
-2. For Windows:
-   cd build_scripts
-   ./build.bat
-
-## Installation
-1. Install Python dependencies:
-   pip install -r requirements.txt
-
-2. Install the package:
-   pip install -e .
-
-3. Run tests to verify installation:
-   python tests/test_matrix_ops.py
-
-## Usage
-Here's a simple example of how to use the library:
-
-```python
-import numpy as np
-import cuda_ops
-
-# Create matrices
-a = np.array([[1, 2, 3],
-              [4, 5, 6]], dtype=np.float32)
-b = np.array([[7, 8],
-              [9, 10],
-              [11, 12]], dtype=np.float32)
-
-# CPU multiplication
-result_cpu = cuda_ops.matrix_multiply(a, b, use_gpu=False)
-
-# GPU multiplication
-result_gpu = cuda_ops.matrix_multiply(a, b, use_gpu=True)
+4. Install Python package:
+```powershell
+pip install -r requirements.txt
+pip install -e .
 ```
 
-## Running the Example
+## Building from Source
 
-To run the example script that demonstrates both CPU and GPU performance:
+### Manual Build (Linux)
+
+If you prefer to build manually instead of using the build script:
 
 ```bash
-python example.py
+# Create and enter build directory
+mkdir build && cd build
+
+# Configure with CMake
+cmake ..
+
+# Build
+make -j4
+
+# Install Python package
+cd ..
+pip install -e .
 ```
 
-This will:
-1. Show a simple matrix multiplication example
-2. Compare CPU and GPU results
-3. Run performance tests with different matrix sizes
+### Manual Build (Windows)
 
-## Performance
+If you prefer to build manually instead of using the build script:
 
-The GPU implementation uses shared memory and optimized memory access patterns for better performance. You should see significant speedup for larger matrices.
+```powershell
+# Create and enter build directory
+mkdir build; cd build
 
-## Troubleshooting
+# Configure with CMake
+cmake ..
 
-If you encounter any issues:
+# Build
+cmake --build . --config Release
 
-1. Make sure CUDA is properly installed
-2. Check that your GPU is CUDA-compatible
-3. Verify that the NVIDIA drivers are up to date
-4. Ensure the library is properly installed with `pip install -e .`
+# Install Python package
+cd ..
+pip install -e .
+```
+
+### Build Options
+
+You can customize the build with the following CMake options:
+
+- `-DCMAKE_BUILD_TYPE=Release|Debug` - Set build type (default: Release)
+- `-DCUDA_ARCH=75` - Set target CUDA architecture (default: auto-detect)
+- `-DPYTHON_EXECUTABLE=/path/to/python` - Specify Python interpreter
+- `-DBUILD_TESTS=ON|OFF` - Build test suite (default: ON)
+
+Example:
+```bash
+cmake -DCMAKE_BUILD_TYPE=Debug -DCUDA_ARCH=75 ..
+```
+
+## Usage
+
+```python
+import numpy as np
+from cuda_matrix_ops import matrix_multiply
+
+# Create input matrices
+a = np.random.rand(1000, 1000).astype(np.float32)
+b = np.random.rand(1000, 1000).astype(np.float32)
+
+# Perform matrix multiplication
+c = matrix_multiply(a, b)
+
+# Verify result
+expected = np.matmul(a, b)
+print(f"Max difference: {np.max(np.abs(c - expected))}")
+```
+
+## Development
+
+### Project Structure
+
+```
+cuda-matmul/
+├── src/                    # Source files
+│   ├── matrix_ops.cu      # CUDA kernels
+│   ├── matrix_ops.h       # Header file
+│   ├── bindings.cpp       # Python bindings
+│   └── cuda_ops.cu        # CUDA operations
+├── tests/                  # Test files
+│   └── test_matrix_ops.py # Python tests
+├── CMakeLists.txt         # CMake configuration
+├── build.sh              # Linux build script
+├── build.bat             # Windows build script
+└── setup.py              # Python package setup
+```
+
+### Running Tests
+
+```bash
+# From the project root
+cd tests
+python -m pytest test_matrix_ops.py -v
+```
+
+### Building from Source
+
+1. Ensure CUDA Toolkit is installed
+2. Run the appropriate build script:
+   - Linux: `./build.sh`
+   - Windows: `.\build.bat`
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Commit your changes
+4. Push to the branch
+5. Create a Pull Request
 
 ## License
 
-This project is licensed under the MIT License - see the LICENSE file for details. 
+This project is licensed under the MIT License - see the LICENSE file for details.
+
+## Acknowledgments
+
+- NVIDIA for CUDA Toolkit
+- PyBind11 for Python bindings
+- CMake for build system 
