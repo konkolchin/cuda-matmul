@@ -1,0 +1,45 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+.venv/
+venv/
+ENV/
+*.egg-info/
+dist/
+build/
+
+# CUDA and build artifacts
+*.o
+*.obj
+*.exe
+*.dll
+*.so
+*.dylib
+*.deb
+*.zip
+cuda_ops.so
+cuda_matrix_ops.zip
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Build directories
+build/
+**/build/
+
+# Docker
+.docker/
+
+# System
+.DS_Store
+Thumbs.db
+
+# Project specific
+cuda-repo-*
+cuda_matrix_ops/ 
