@@ -53,7 +53,14 @@ jobs:
         chmod +x build.sh
         ./build.sh
 
-    - name: Run tests
+    - name: Run correctness tests
       run: |
         cd tests
-        python -m pytest test_matrix_ops.py -v
+        # Run all tests except performance tests with logging
+        python -m pytest test_matrix_ops.py -v -m "not performance" --log-cli-level=INFO
+
+    - name: Run performance tests
+      run: |
+        cd tests
+        # Run only performance tests with detailed output and no capture
+        python -m pytest test_matrix_ops.py -v -m "performance" --log-cli-level=INFO --capture=no

@@ -3,6 +3,11 @@ import numpy as np
 import time
 import cuda_ops
 import cuda_runtime
+import pytest
+import logging
+
+# Configure logging
+logger = logging.getLogger(__name__)
 
 def has_gpu():
     try:
@@ -83,14 +88,22 @@ class TestMatrixOps(unittest.TestCase):
                 with self.assertRaises(RuntimeError):
                     cuda_ops.matrix_multiply(a, b, use_gpu=True, block_size=block_size)
             
+    @pytest.mark.performance
     def test_performance(self):
+        """Test and report performance of matrix multiplication with different block sizes."""
         # Test performance with large matrices
         sizes = [(1024, 1024), (2048, 2048)]  # Test both sizes
         
-        print("\nPerformance Test Results:")
-        print("Matrix Size\tCPU Time (s)\tGPU 16x16 (s)\tGPU 32x32 (s)\tSpeedup 16x16\tSpeedup 32x32")
-        print("-" * 80)
+        # Create a table header for the results
+        header = "Matrix Size\tCPU Time (s)\tGPU 16x16 (s)\tGPU 32x32 (s)\tSpeedup 16x16\tSpeedup 32x32"
+        separator = "-" * 80
         
+        # Log the header using pytest's logging
+        logger.info("\nPerformance Test Results:")
+        logger.info(header)
+        logger.info(separator)
+        
+        results = []
         for m, n in sizes:
             k = m  # Square matrices for simplicity
             a = np.random.rand(m, k).astype(np.float32)
@@ -122,9 +135,32 @@ class TestMatrixOps(unittest.TestCase):
                     gpu_times.append(gpu_time)
                     speedups.append(cpu_time / gpu_time)
                 
-                print(f"{m}x{n}\t\t{cpu_time:.4f}\t\t{gpu_times[0]:.4f}\t\t{gpu_times[1]:.4f}\t\t{speedups[0]:.2f}x\t\t{speedups[1]:.2f}x")
+                result = f"{m}x{n}\t\t{cpu_time:.4f}\t\t{gpu_times[0]:.4f}\t\t{gpu_times[1]:.4f}\t\t{speedups[0]:.2f}x\t\t{speedups[1]:.2f}x"
+                logger.info(result)
+                
+                # Store results for potential test assertions
+                results.append({
+                    'size': f"{m}x{n}",
+                    'cpu_time': cpu_time,
+                    'gpu_times': gpu_times,
+                    'speedups': speedups
+                })
+                
+                # Add test assertions to verify performance
+                # These will be reported in the test results
+                self.assertGreater(speedups[0], 1.0, f"16x16 block size should be faster than CPU for {m}x{n} matrices")
+                self.assertGreater(speedups[1], 1.0, f"32x32 block size should be faster than CPU for {m}x{n} matrices")
+                
+                # Log detailed performance metrics
+                logger.info(f"Detailed metrics for {m}x{n} matrices:")
+                logger.info(f"  CPU time: {cpu_time:.4f}s")
+                logger.info(f"  GPU time (16x16): {gpu_times[0]:.4f}s (speedup: {speedups[0]:.2f}x)")
+                logger.info(f"  GPU time (32x32): {gpu_times[1]:.4f}s (speedup: {speedups[1]:.2f}x)")
             else:
-                print(f"{m}x{n}\t\t{cpu_time:.4f}\t\tN/A\t\tN/A\t\tN/A\t\tN/A")
+                result = f"{m}x{n}\t\t{cpu_time:.4f}\t\tN/A\t\tN/A\t\tN/A\t\tN/A"
+                logger.info(result)
 
 if __name__ == '__main__':
+    # Configure logging for when running directly
+    logging.basicConfig(level=logging.INFO)
     unittest.main() 
