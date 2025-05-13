@@ -12,7 +12,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest]
-        cuda-version: ['11.4']
+        cuda-version: ['11.4.4']
 
     steps:
     - uses: actions/checkout@v3
@@ -23,14 +23,7 @@ jobs:
         python-version: '3.8'
 
     - name: Set up CUDA
-      if: matrix.os == 'ubuntu-latest'
-      uses: jwlawson/actions-setup-cuda@v1.13.0
-      with:
-        cuda-version: ${{ matrix.cuda-version }}
-
-    - name: Set up CUDA (Windows)
-      if: matrix.os == 'windows-latest'
-      uses: jwlawson/actions-setup-cuda@v1.13.0
+      uses: nvidia/setup-cuda@v1
       with:
         cuda-version: ${{ matrix.cuda-version }}
         windows-install-dir: 'C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA'
