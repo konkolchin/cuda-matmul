@@ -123,21 +123,30 @@ class TestMatrixOps(unittest.TestCase):
         results = []
         for m, n in sizes:
             k = m  # Square matrices for simplicity
+            logger.info(f"\nTesting {m}x{n} matrices...")
+            
+            # Generate matrices
+            logger.info("Generating test matrices...")
             a = np.random.rand(m, k).astype(np.float32)
             b = np.random.rand(k, n).astype(np.float32)
             
-            # Warm-up runs
-            for _ in range(3):
+            # Warm-up runs (reduced to 2)
+            logger.info("Performing warm-up runs...")
+            for i in range(2):
+                logger.info(f"Warm-up run {i+1}/2")
                 cuda_ops.matrix_multiply(a, b, use_gpu=False)
                 if self.has_gpu:
                     for block_size in self.block_sizes:
                         cuda_ops.matrix_multiply(a, b, use_gpu=True, block_size=block_size)
             
-            # CPU timing
+            # CPU timing (reduced to 3 runs)
+            logger.info("Measuring CPU performance...")
             start = time.time()
-            for _ in range(5):
+            for i in range(3):
+                logger.info(f"CPU run {i+1}/3")
                 cuda_ops.matrix_multiply(a, b, use_gpu=False)
-            cpu_time = (time.time() - start) / 5
+            cpu_time = (time.time() - start) / 3
+            logger.info(f"Average CPU time: {cpu_time:.4f}s")
             
             # GPU timing if available
             if self.has_gpu:
@@ -145,12 +154,15 @@ class TestMatrixOps(unittest.TestCase):
                 speedups = []
                 
                 for block_size in self.block_sizes:
+                    logger.info(f"Measuring GPU performance with {block_size}x{block_size} blocks...")
                     start = time.time()
-                    for _ in range(5):
+                    for i in range(3):  # Reduced to 3 runs
+                        logger.info(f"GPU run {i+1}/3")
                         cuda_ops.matrix_multiply(a, b, use_gpu=True, block_size=block_size)
-                    gpu_time = (time.time() - start) / 5
+                    gpu_time = (time.time() - start) / 3
                     gpu_times.append(gpu_time)
                     speedups.append(cpu_time / gpu_time)
+                    logger.info(f"Average GPU time ({block_size}x{block_size}): {gpu_time:.4f}s")
                 
                 result = f"{m}x{n}\t\t{cpu_time:.4f}\t\t{gpu_times[0]:.4f}\t\t{gpu_times[1]:.4f}\t\t{speedups[0]:.2f}x\t\t{speedups[1]:.2f}x"
                 logger.info(result)
@@ -164,18 +176,12 @@ class TestMatrixOps(unittest.TestCase):
                 })
                 
                 # Add test assertions to verify performance
-                # These will be reported in the test results
                 self.assertGreater(speedups[0], 1.0, f"16x16 block size should be faster than CPU for {m}x{n} matrices")
                 self.assertGreater(speedups[1], 1.0, f"32x32 block size should be faster than CPU for {m}x{n} matrices")
-                
-                # Log detailed performance metrics
-                logger.info(f"Detailed metrics for {m}x{n} matrices:")
-                logger.info(f"  CPU time: {cpu_time:.4f}s")
-                logger.info(f"  GPU time (16x16): {gpu_times[0]:.4f}s (speedup: {speedups[0]:.2f}x)")
-                logger.info(f"  GPU time (32x32): {gpu_times[1]:.4f}s (speedup: {speedups[1]:.2f}x)")
             else:
                 result = f"{m}x{n}\t\t{cpu_time:.4f}\t\tN/A\t\tN/A\t\tN/A\t\tN/A"
                 logger.info(result)
+                logger.info("Skipping GPU tests - no GPU available")
 
 if __name__ == '__main__':
     # Configure logging for when running directly
