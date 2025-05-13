@@ -23,7 +23,7 @@ jobs:
         python-version: '3.8'
 
     - name: Set up CUDA
-      uses: nvidia/setup-cuda@v1
+      uses: nvidia/setup-cuda@v2
       with:
         cuda-version: ${{ matrix.cuda-version }}
         windows-install-dir: 'C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA'
