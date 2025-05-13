@@ -5,15 +5,32 @@ import cuda_ops
 import cuda_runtime
 import pytest
 import logging
+import os
 
 # Configure logging
 logger = logging.getLogger(__name__)
 
 def has_gpu():
+    """Check if CUDA is available and log the environment details."""
     try:
-        cuda_runtime.cudaGetDeviceCount()
-        return True
-    except:
+        # Log CUDA environment variables
+        logger.info(f"CUDA_HOME: {os.environ.get('CUDA_HOME', 'Not set')}")
+        logger.info(f"LD_LIBRARY_PATH: {os.environ.get('LD_LIBRARY_PATH', 'Not set')}")
+        
+        # Try to get device count
+        device_count = cuda_runtime.cudaGetDeviceCount()
+        logger.info(f"Found {device_count} CUDA device(s)")
+        
+        if device_count > 0:
+            # Get device properties for the first device
+            props = cuda_runtime.cudaGetDeviceProperties(0)
+            logger.info(f"Device 0: {props.name.decode() if hasattr(props, 'name') else 'Unknown'}")
+            return True
+        else:
+            logger.warning("No CUDA devices found")
+            return False
+    except Exception as e:
+        logger.error(f"Error checking CUDA availability: {str(e)}")
         return False
 
 class TestMatrixOps(unittest.TestCase):
