@@ -12,7 +12,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest]
-        cuda-version: ['12.1']
+        cuda-version: ['11.7.0']
 
     steps:
     - uses: actions/checkout@v3
@@ -28,7 +28,6 @@ jobs:
         cuda-version: ${{ matrix.cuda-version }}
         windows-install-dir: 'C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA'
         components: cuda-toolkit
-        arch: x86_64
 
     - name: Install dependencies (Ubuntu)
       if: matrix.os == 'ubuntu-latest'
