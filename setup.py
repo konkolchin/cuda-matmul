@@ -1,4 +1,4 @@
-from setuptools import setup, Extension
+from setuptools import setup, Extension, find_packages
 from setuptools.command.build_ext import build_ext
 import sys
 import os
@@ -77,6 +77,8 @@ setup(
     description='CUDA matrix operations',
     long_description='',
     ext_modules=[CMakeExtension('cuda_ops')],
+    packages=find_packages(where='src'),
+    package_dir={'': 'src'},
     cmdclass=dict(build_ext=CMakeBuild),
     zip_safe=False,
 ) 
