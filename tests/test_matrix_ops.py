@@ -6,6 +6,7 @@ import cuda_runtime
 import pytest
 import logging
 import os
+import random
 
 # Configure logging
 logger = logging.getLogger(__name__)
@@ -35,8 +36,14 @@ def has_gpu():
 
 class TestMatrixOps(unittest.TestCase):
     def setUp(self):
-        # Set random seed for reproducibility
-        np.random.seed(42)
+        # Generate and log a random seed for reproducibility
+        self.seed = random.randint(0, 2**32 - 1)
+        logger.info(f"Test seed: {self.seed}")
+        
+        # Set seeds for all random number generators
+        np.random.seed(self.seed)
+        random.seed(self.seed)
+        
         self.has_gpu = has_gpu()
         self.block_sizes = [16, 32]  # Define block sizes to test
         
@@ -64,6 +71,10 @@ class TestMatrixOps(unittest.TestCase):
         a = np.random.rand(m, k).astype(np.float32)
         b = np.random.rand(k, n).astype(np.float32)
         
+        # Log matrix shapes and some sample values for debugging
+        logger.info(f"Matrix shapes: A({m}x{k}), B({k}x{n})")
+        logger.info(f"Sample values - A[0,0]: {a[0,0]}, B[0,0]: {b[0,0]}")
+        
         # Expected result using numpy
         expected = np.matmul(a, b)
         
@@ -82,6 +93,10 @@ class TestMatrixOps(unittest.TestCase):
         m, k, n = 2048, 2048, 2048
         a = np.random.rand(m, k).astype(np.float32)
         b = np.random.rand(k, n).astype(np.float32)
+        
+        # Log matrix shapes and some sample values for debugging
+        logger.info(f"Matrix shapes: A({m}x{k}), B({k}x{n})")
+        logger.info(f"Sample values - A[0,0]: {a[0,0]}, B[0,0]: {b[0,0]}")
         
         # Expected result using numpy
         expected = np.matmul(a, b)
@@ -115,8 +130,9 @@ class TestMatrixOps(unittest.TestCase):
         header = "Matrix Size\tCPU Time (s)\tGPU 16x16 (s)\tGPU 32x32 (s)\tSpeedup 16x16\tSpeedup 32x32"
         separator = "-" * 80
         
-        # Log the header using pytest's logging
+        # Log the header and seed
         logger.info("\nPerformance Test Results:")
+        logger.info(f"Using seed: {self.seed}")
         logger.info(header)
         logger.info(separator)
         
@@ -129,6 +145,9 @@ class TestMatrixOps(unittest.TestCase):
             logger.info("Generating test matrices...")
             a = np.random.rand(m, k).astype(np.float32)
             b = np.random.rand(k, n).astype(np.float32)
+            
+            # Log some sample values for debugging
+            logger.info(f"Sample values - A[0,0]: {a[0,0]}, B[0,0]: {b[0,0]}")
             
             # Warm-up runs (reduced to 2)
             logger.info("Performing warm-up runs...")
