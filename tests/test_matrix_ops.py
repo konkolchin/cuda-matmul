@@ -7,6 +7,9 @@ import pytest
 import logging
 import os
 import random
+import sys
+import platform
+import cuda
 
 # Configure logging
 logger = logging.getLogger(__name__)
@@ -14,9 +17,17 @@ logger = logging.getLogger(__name__)
 def has_gpu():
     """Check if CUDA is available and log the environment details."""
     try:
+        # Log Python and system information
+        logger.info(f"Python version: {sys.version}")
+        logger.info(f"Platform: {platform.platform()}")
+        
         # Log CUDA environment variables
         logger.info(f"CUDA_HOME: {os.environ.get('CUDA_HOME', 'Not set')}")
         logger.info(f"LD_LIBRARY_PATH: {os.environ.get('LD_LIBRARY_PATH', 'Not set')}")
+        
+        # Get CUDA version
+        cuda_version = cuda.cudaDriverGetVersion()
+        logger.info(f"CUDA Driver Version: {cuda_version // 1000}.{(cuda_version % 1000) // 10}")
         
         # Try to get device count
         device_count = cuda_runtime.cudaGetDeviceCount()
@@ -26,6 +37,11 @@ def has_gpu():
             # Get device properties for the first device
             props = cuda_runtime.cudaGetDeviceProperties(0)
             logger.info(f"Device 0: {props.name.decode() if hasattr(props, 'name') else 'Unknown'}")
+            logger.info(f"Compute Capability: {props.major}.{props.minor}")
+            logger.info(f"Total Global Memory: {props.totalGlobalMem / 1024**3:.1f} GB")
+            logger.info(f"Multiprocessors: {props.multiProcessorCount}")
+            logger.info(f"Max Threads Per Block: {props.maxThreadsPerBlock}")
+            logger.info(f"Warp Size: {props.warpSize}")
             return True
         else:
             logger.warning("No CUDA devices found")

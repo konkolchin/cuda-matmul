@@ -12,12 +12,28 @@ A high-performance CUDA-accelerated matrix operations library with Python bindin
 
 ## Requirements
 
-- NVIDIA GPU with CUDA support
-- CUDA Toolkit 11.4 or later
+- CUDA Toolkit 11.4 or later (tested with CUDA 11.4.4)
+- Python 3.8 or later (tested with Python 3.8.10)
+- NVIDIA GPU with compute capability 3.5 or higher
+- GCC/G++ compiler (Linux) or Visual Studio (Windows)
 - CMake 3.10 or later
+
+### Hardware Requirements
+- NVIDIA GPU with at least 2GB of VRAM
+- Minimum compute capability: 3.5
+- Recommended compute capability: 6.0 or higher for optimal performance
+
+### Software Requirements
+- CUDA Toolkit 11.4 or later
+  - Driver version must be compatible with the installed CUDA Toolkit
+  - For CUDA 11.4, NVIDIA driver version 450.80.02 or later is required
 - Python 3.8 or later
-- NumPy
-- Build tools (GCC/Clang for Linux, Visual Studio for Windows)
+  - NumPy 1.19.0 or later
+  - PyCUDA 2021.1 or later
+- Build tools:
+  - Linux: GCC/G++ 7.0 or later
+  - Windows: Visual Studio 2019 or later with C++ build tools
+  - CMake 3.10 or later
 
 ## Installation
 
